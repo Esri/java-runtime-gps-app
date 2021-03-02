@@ -38,6 +38,7 @@ dependencies {
     implementation "com.esri.arcgisruntime:arcgis-java:$arcgisVersion"
     natives "com.esri.arcgisruntime:arcgis-java-jnilibs:$arcgisVersion"
     natives "com.esri.arcgisruntime:arcgis-java-resources:$arcgisVersion"
+    implementation "com.fazecast:jSerialComm:[2.0.0,3.0.0)"
 }
 
 javafx {

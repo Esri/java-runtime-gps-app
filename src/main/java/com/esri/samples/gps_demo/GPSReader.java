@@ -1,0 +1,132 @@
+/**
+ * Copyright 2021 Esri
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy
+ * of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+package com.esri.samples.gps_demo;
+import com.esri.arcgisruntime.location.NmeaLocationDataSource;
+import com.fazecast.jSerialComm.SerialPort;
+import com.fazecast.jSerialComm.SerialPortDataListener;
+import com.fazecast.jSerialComm.SerialPortEvent;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.List;
+
+public class GPSReader {
+    private final NmeaLocationDataSource nmeaLocationDataSource;
+
+    private SerialPort gpsSerialPort = null;
+
+    public GPSReader(NmeaLocationDataSource source) {
+        nmeaLocationDataSource = source;
+
+        // try each available port in turn
+        for (SerialPort serialPort : SerialPort.getCommPorts()) {
+            System.out.println("detected port name " + serialPort.getSystemPortName());
+            PortChecker portChecker = new PortChecker(serialPort);
+            portChecker.start();
+        }
+    }
+
+    public SerialPort getGpsSerialPort() {
+        return gpsSerialPort;
+    }
+
+    private class PortChecker extends Thread {
+        private String nmeaSentence = "";
+        private boolean foundGPS = false;
+        private final SerialPort serialPort;
+        // list of baud rates to try.  4800 baud is most commonly used so trying that first
+        private final List<Integer> baudRates = Arrays.asList(4800, 9600, 19200, 1200, 2400);
+
+        // constructor takes in serial port to check
+        public PortChecker(SerialPort serialPort) {
+            this.serialPort = serialPort;
+        }
+        public void run(){
+            System.out.println("Checking " + serialPort.getSystemPortName());
+            // loop through the possible baud rates
+            for (int baudRate : baudRates) {
+                // check if we have found the port already on another tread
+                if (gpsSerialPort == null) {
+                    System.out.println("trying " + serialPort.getSystemPortName() + " with baud rate of " + baudRate);
+                    // open serial port
+                    serialPort.setComPortParameters(baudRate, 8, 1, 0);
+                    serialPort.openPort();
+
+                    // set up a listen for new data
+                    serialPort.addDataListener(new SerialPortDataListener() {
+                        @Override
+                        public int getListeningEvents() {
+                            return SerialPort.LISTENING_EVENT_DATA_AVAILABLE;
+                        }
+
+                        @Override
+                        public void serialEvent(SerialPortEvent event) {
+                            // return if anything other than new data
+                            if (event.getEventType() != SerialPort.LISTENING_EVENT_DATA_AVAILABLE)
+                                return;
+                            // read what has come in
+                            byte[] newData = new byte[serialPort.bytesAvailable()];
+                            serialPort.readBytes(newData, newData.length);
+                            // convert byte array to string
+                            String s = new String(newData, StandardCharsets.UTF_8);
+                            // as it comes in 1 byte at a time build up the sentence...
+                            nmeaSentence = nmeaSentence + s;
+                            // are we reading from a verified GPS unit?
+                            if (foundGPS) {
+                                // see if we have come up to the end of the sentence
+                                if (s.contains("\n")) {
+                                    // send the sentence to the location data source for parsing.
+                                    // this could be improved as we are reading in bytes, converting them to a string to build up the sentence, then
+                                    // converting back to a byte array.
+                                    System.out.println(nmeaSentence);
+
+                                    nmeaLocationDataSource.pushData(nmeaSentence.getBytes());
+                                    // clear the way for a new sentence
+                                    nmeaSentence = "";
+                                }
+                            }
+                        }
+                    });
+
+                    // give the port a while to collect some data
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+
+                    // see if we have a sentence containing $GP which indicates we are reading from a GPS at correct baud rate
+                    System.out.println();
+                    System.out.println("checking: " + nmeaSentence);
+                    System.out.println();
+                    if (nmeaSentence.contains("$GP")) {
+                        System.out.println("------------------------------------GPS FOUND on " + serialPort.getSystemPortName());
+                        foundGPS = true;
+                        nmeaSentence = "";
+                        // record the serial port reference globally so we can close it on app closure.
+                        gpsSerialPort = serialPort;
+                        break;
+                    }
+                    // close the port
+                    serialPort.closePort();
+                    // clear sentence
+                    nmeaSentence = "";
+                }
+            }
+            System.out.println("thread stopping for " + serialPort.getSystemPortName());
+        }
+    }
+}
