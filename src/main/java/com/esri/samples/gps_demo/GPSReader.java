@@ -112,7 +112,6 @@ public class GPSReader {
                                 if (s.contains("\n")) {
                                     // send the sentence to the location data source for parsing.
                                     System.out.println(nmeaSentence);
-
                                     nmeaLocationDataSource.pushData(nmeaSentence.getBytes());
                                     // clear the way for a new sentence
                                     nmeaSentence = "";
@@ -121,7 +120,7 @@ public class GPSReader {
                         }
                     });
 
-                    // give the port a while to collect some data
+                    // give the port a while to collect some data before we start checking for $GP
                     try {
                         System.out.println("sleeping for 1 sec");
                         Thread.sleep(1000);
@@ -130,19 +129,19 @@ public class GPSReader {
                     }
 
                     // see if we have a sentence containing $GP which indicates we are reading from a GPS at correct baud rate
-                    System.out.println();
                     System.out.println("checking: " + nmeaSentence);
-                    System.out.println();
                     if (nmeaSentence.contains("$GP")) {
                         System.out.println("------------------------------------GPS FOUND on " + serialPort.getSystemPortName());
                         foundGPS = true;
                         nmeaSentence = "";
-                        // record the serial port reference globally so we can close it on app closure.
+                        // record the serial port reference so we can close it on app closure.
                         gpsSerialPort = serialPort;
                         break;
                     }
+
                     // close the port
                     serialPort.closePort();
+
                     // clear sentence
                     nmeaSentence = "";
                 }
