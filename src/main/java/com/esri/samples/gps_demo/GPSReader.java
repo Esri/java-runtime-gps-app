@@ -139,10 +139,10 @@ public class GPSReader {
                         break;
                     }
 
-                    // close the port
+                    // close the port as we've not found a GPS device here
                     serialPort.closePort();
 
-                    // clear sentence
+                    // clear sentence ready to try out another baud rate
                     nmeaSentence = "";
                 }
             }
