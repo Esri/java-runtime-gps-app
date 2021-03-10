@@ -111,8 +111,6 @@ public class GPSReader {
                                 // see if we have come up to the end of the sentence
                                 if (s.contains("\n")) {
                                     // send the sentence to the location data source for parsing.
-                                    // this could be improved as we are reading in bytes, converting them to a string to build up the sentence, then
-                                    // converting back to a byte array.
                                     System.out.println(nmeaSentence);
 
                                     nmeaLocationDataSource.pushData(nmeaSentence.getBytes());
