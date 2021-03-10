@@ -32,7 +32,6 @@ public class GPS_demo extends Application {
     private GPSReader gpsReader;
 
     public static void main(String[] args) {
-
         Application.launch(args);
     }
 
