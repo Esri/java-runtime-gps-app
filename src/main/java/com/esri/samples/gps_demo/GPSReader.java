@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2021 Esri
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
@@ -23,11 +23,20 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * A class for connecting to a serial port for reading NMEA data and sending the data received
+ * from the GPS device to a specified {@link NmeaLocationDataSource}.
+ **/
 public class GPSReader {
     private final NmeaLocationDataSource nmeaLocationDataSource;
 
     private SerialPort gpsSerialPort = null;
 
+    /**
+     * Constructor for the class which takes in the {@link NmeaLocationDataSource} which will be used to
+     * display the location obtained from the GPS device
+     * @param source the location data source
+     */
     public GPSReader(NmeaLocationDataSource source) {
         nmeaLocationDataSource = source;
 
@@ -39,10 +48,19 @@ public class GPSReader {
         }
     }
 
+    /**
+     * Returns the serial port which is connected to the GPS device.  This {@link SerialPort} can be
+     * used for closing the port when it is no longer needed or the application closes.
+     * @return serial port
+     */
     public SerialPort getGpsSerialPort() {
         return gpsSerialPort;
     }
 
+    /**
+     * Class used to check if a GPS device is connected to it.  If a GPS device is found then this will be used
+     * to read in the NMEA sentences and pass them to the location data source for processing.
+     */
     private class PortChecker extends Thread {
         private String nmeaSentence = "";
         private boolean foundGPS = false;
@@ -50,10 +68,14 @@ public class GPSReader {
         // list of baud rates to try.  4800 baud is most commonly used so trying that first
         private final List<Integer> baudRates = Arrays.asList(4800, 9600, 19200, 1200, 2400);
 
-        // constructor takes in serial port to check
+        /**
+         * Constructor takes in the serial port to check if it has a GPS device connected to it
+         * @param serialPort the serial port
+         */
         public PortChecker(SerialPort serialPort) {
             this.serialPort = serialPort;
         }
+
         public void run(){
             System.out.println("Checking " + serialPort.getSystemPortName());
             // loop through the possible baud rates
@@ -103,6 +125,7 @@ public class GPSReader {
 
                     // give the port a while to collect some data
                     try {
+                        System.out.println("sleeping for 1 sec");
                         Thread.sleep(1000);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
