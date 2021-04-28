@@ -49,13 +49,6 @@ public class GPS_demo extends Application {
         Scene scene = new Scene(stackPane);
         stage.setScene(scene);
 
-        // Note: it is not best practice to store API keys in source code.
-        // An API key is required to enable access to services, web maps, and web scenes hosted in ArcGIS Online.
-        // If you haven't already, go to your developer dashboard to get your API key.
-        // Please refer to https://developers.arcgis.com/java/get-started/ for more information
-        //String yourApiKey = "YOUR_API_KEY";
-        //ArcGISRuntimeEnvironment.setApiKey(yourApiKey);
-
         // create a MapView to display the map and add it to the stack pane
         mapView = new MapView();
         stackPane.getChildren().add(mapView);
@@ -73,7 +66,6 @@ public class GPS_demo extends Application {
         // start location data source and wait for it to be ready
         nmeaLocationDataSource.startAsync();
         nmeaLocationDataSource.addStartedListener(()-> {
-            System.out.println("lds started");
             gpsReader = new GPSReader(nmeaLocationDataSource);
         });
     }
@@ -83,7 +75,12 @@ public class GPS_demo extends Application {
      */
     @Override
     public void stop() {
-        if (gpsReader != null) gpsReader.getGpsSerialPort().closePort();
+        if (gpsReader != null) {
+            //if (gpsReader.getGpsSerialPort() != null) {
+            //    gpsReader.getGpsSerialPort().closePort();
+            //}
+            gpsReader.close();
+        }
         if (mapView != null) mapView.dispose();
     }
 }
