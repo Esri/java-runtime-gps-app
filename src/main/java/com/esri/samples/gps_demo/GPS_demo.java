@@ -75,12 +75,7 @@ public class GPS_demo extends Application {
      */
     @Override
     public void stop() {
-        if (gpsReader != null) {
-            //if (gpsReader.getGpsSerialPort() != null) {
-            //    gpsReader.getGpsSerialPort().closePort();
-            //}
-            gpsReader.close();
-        }
+        if (gpsReader != null) gpsReader.close();
         if (mapView != null) mapView.dispose();
     }
 }
