@@ -40,11 +40,12 @@ public class GPSReader {
     public GPSReader(NmeaLocationDataSource source) {
         nmeaLocationDataSource = source;
 
-        // try each available port in turn
+        // try each available port in turn on a thread
         for (SerialPort serialPort : SerialPort.getCommPorts()) {
             System.out.println("detected port name " + serialPort.getSystemPortName());
-            PortChecker portChecker = new PortChecker(serialPort);
-            portChecker.start();
+            Runnable portChecker = new PortChecker(serialPort);
+            Thread portThread = new Thread(portChecker);
+            portThread.start();
         }
     }
 
@@ -70,7 +71,7 @@ public class GPSReader {
      * Class used to check if a GPS device is connected to it.  If a GPS device is found then this will be used
      * to read in the NMEA sentences and pass them to the location data source for processing.
      */
-    private class PortChecker extends Thread {
+    private class PortChecker implements Runnable {
         private String nmeaSentence = "";
         private boolean foundGPS = false;
         private final SerialPort serialPort;
