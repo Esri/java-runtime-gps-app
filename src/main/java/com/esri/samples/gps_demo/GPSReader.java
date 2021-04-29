@@ -94,7 +94,7 @@ public class GPSReader {
                 if (gpsSerialPort == null) {
                     System.out.println("trying " + serialPort.getSystemPortName() + " with baud rate of " + baudRate);//
 
-                    // open serial port
+                    // open serial port at current baud rate, 8 data bits, 1 stop bit and no parity
                     serialPort.setComPortParameters(baudRate, 8, 1, 0);
                     serialPort.openPort();
 
