@@ -53,7 +53,7 @@ public class GPS_demo extends Application {
         mapView = new MapView();
         stackPane.getChildren().add(mapView);
 
-        // create an ArcGISMap with an imagery basemap
+        // create an ArcGISMap with a streets basemap
         ArcGISMap map = new ArcGISMap(Basemap.createStreets());
 
         // display the map by setting the map on the map view
@@ -75,6 +75,7 @@ public class GPS_demo extends Application {
      */
     @Override
     public void stop() {
+        nmeaLocationDataSource.stop();
         if (gpsReader != null) gpsReader.close();
         if (mapView != null) mapView.dispose();
     }

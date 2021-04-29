@@ -75,7 +75,7 @@ public class GPSReader {
         private String nmeaSentence = "";
         private boolean foundGPS = false;
         private final SerialPort serialPort;
-        // list of baud rates to try.  4800 baud is most commonly used so trying that first
+        // list of baud rates to try.  4800 baud is most commonly used so it will be checked first
         private final List<Integer> baudRates = Arrays.asList(4800, 9600, 19200, 1200, 2400);
 
         /**
@@ -90,7 +90,7 @@ public class GPSReader {
             System.out.println("Checking " + serialPort.getSystemPortName());
             // loop through the possible baud rates
             for (int baudRate : baudRates) {
-                // check if we have found the port already on another tread or are shutting down the app
+                // check if we have found the port already on another thread
                 if (gpsSerialPort == null) {
                     System.out.println("trying " + serialPort.getSystemPortName() + " with baud rate of " + baudRate);//
 
@@ -98,7 +98,7 @@ public class GPSReader {
                     serialPort.setComPortParameters(baudRate, 8, 1, 0);
                     serialPort.openPort();
 
-                    // set up a listen for new data
+                    // set up a listener for new data
                     serialPort.addDataListener(new SerialPortDataListener() {
                         @Override
                         public int getListeningEvents() {
@@ -118,7 +118,7 @@ public class GPSReader {
                             // as it comes in 1 byte at a time build up the sentence...
                             nmeaSentence = nmeaSentence + s;
 
-                            // are we reading from a verified GPS unit?
+                            // check if a verified GPS unit is being read
                             if (foundGPS) {
                                 // send the data to the location data source for parsing
                                 nmeaLocationDataSource.pushData(newData);
@@ -126,7 +126,7 @@ public class GPSReader {
                         }
                     });
 
-                    // give the port a while to collect some data before we start checking for $GP
+                    // give the port a while to collect some data before we start checking for $GP messages
                     try {
                         Thread.sleep(1000);
                     } catch (InterruptedException e) {
